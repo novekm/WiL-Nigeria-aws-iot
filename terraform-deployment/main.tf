@@ -32,10 +32,10 @@ module "wil-iot-core" {
       name       = "WiL_Nigeria_ClimateSensor_Array1"
       short_name = "CSA1"
     },
-    ClimateSensorArray2 : {
-      name       = "WiL_Nigeria_ClimateSensor_Array2"
-      short_name = "CSA2"
-    },
+    # ClimateSensorArray2 : {
+    #   name       = "WiL_Nigeria_ClimateSensor_Array2"
+    #   short_name = "CSA2"
+    # },
 
 
   }
@@ -47,10 +47,10 @@ module "wil-iot-core" {
       name       = "WiL_Nigeria_FlowSensor_Array1"
       short_name = "FSA1"
     },
-    FlowSensorArray2 : {
-      name       = "WiL_Nigeria_FlowSensor_Array2"
-      short_name = "FSA2"
-    },
+    # FlowSensorArray2 : {
+    #   name       = "WiL_Nigeria_FlowSensor_Array2"
+    #   short_name = "FSA2"
+    # },
 
   }
 

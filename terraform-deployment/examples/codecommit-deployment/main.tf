@@ -1,8 +1,13 @@
 // This is a tempclate file for a basic deployment.
 // Modify the parameters below with actual values
-module "minipupper-iot-core" {
+module "wil-iot-core" {
   // location of the module - can be local or git repo
-  source = "./modules/minipupper-iot-core"
+  source = "./modules/wil-iot-core"
+
+  project_prefix = "WiL"
+
+  create_amplify_app = false // default value
+  create_graphql_api = false // default value
 
   # - Network Information -
   # Note: For added security, eventually these values could be stored in SSM parameter store,
@@ -12,76 +17,69 @@ module "minipupper-iot-core" {
   # For production workloads, we strongly advise against hardcoding sensitive values.
 
   # Primary WiFi - REQUIRED
-  mpc_wifi_ssid_1     = "" // enter SSID for the primary local network you want devices to connect to
-  mpc_wifi_password_1 = "" // enter password for the primary local network you want devices to
-
-  # Conditional Data Source fetch of existing values in SSM Parameter store.
-  lookup_existing_minipuppers_ssm_parameters = false
-
-  # Conditional Creation of Greengrass Component and Greengrass Deployment.
-  create_greengrass_component  = false
-  create_greengrass_deployment = false
-
-  # - Amplify App -
-  mpc_create_codecommit_repo = true
+  wifi_ssid     = "" // enter SSID for the primary local network you want your IoT devices to connect to
+  wifi_password = "" // enter password for the primary local network you want your IoT devices to
 
   # - IoT -
-  # Dynamic Creation of IoT Things for Mini Puppers and Gas Sensors
-  // Enter an object for each gas sensor you would like to connect
+  # Dynamic Creation of IoT Things for Climate Sensor Arrays and Flow Sensor Arrays
+  // Enter an object for each Climate Sensor Array you would like to connect
 
-  mpc_gas_sensors = {
+  wil_climate_sensor_arrays = {
     // no spaces allowed in strings
-    Gas1 : {
-      name             = "Gas1"
-      short_name       = "G1"
-      computer_module  = "ESP32"
-      manufacturer     = "M5Stack"
-      model            = "M5StickC-Plus"
-      device           = "Gas Sensor"
-      registered_owner = "Workshop Participant" // Replace with your name
-      primary_location = "re:Invent"
+    ClimateSensorArray1 : {
+      name       = "WiL_Nigeria_ClimateSensor_Array1"
+      short_name = "CSA1"
     },
-    # Gas2 : {
-    #   name             = "Gas2"
-    #   short_name       = "G2"
-    #   computer_module  = "ESP32"
-    #   manufacturer     = "M5Stack"
-    #   model            = "M5StickC-Plus"
-    #   device           = "Gas Sensor"
-    #   registered_owner = "Lee Jeknis" // Your Name
-    #   primary_location = "re:Invent"
+    # ClimateSensorArray2 : {
+    #   name       = "WiL_Nigeria_ClimateSensor_Array2"
+    #   short_name = "CSA2"
+    # },
+
+
+  }
+
+  // Enter an object for each Flow Sensor Array you would like to connect
+  wil_flow_sensor_arrays = {
+    // no spaces allowed in strings
+    FlowSensorArray1 : {
+      name       = "WiL_Nigeria_FlowSensor_Array1"
+      short_name = "FSA1"
+    },
+    # FlowSensorArray2 : {
+    #   name       = "WiL_Nigeria_FlowSensor_Array2"
+    #   short_name = "FSA2"
     # },
 
   }
 
-  # - Cognito -
-  # Admin Users to create
-  mpc_admin_cognito_users = {
-    // replace with your desired cognito users
-    NarutoUzumaki : {
-      username       = "nuzumaki"
-      given_name     = "Naruto"
-      family_name    = "Uzumaki"
-      email          = "nuzumaki@hokage.com"
-      email_verified = true // no touchy
-    },
-    # SasukeUchiha : {
-    #   username       = "suchiha"
-    #   given_name     = "Sasuke"
-    #   family_name    = "Uchiha"
-    #   email          = "suchiha@chidori.com"
-    #   email_verified = true // no touchy
-    # },
-  }
-  # Standard Users to create
-  # mpc_standard_cognito_users = {
+  # # - Cognito -
+  # # Admin Users to create
+  # admin_cognito_users = {
   #   // replace with your desired cognito users
-  #   DefaultStandardUser : {
-  #     username       = "default"
-  #     given_name     = "Default"
-  #     family_name    = "User"
-  #     email          = "default@example.com"
+  #   NarutoUzumaki : {
+  #     username       = "nuzumaki"
+  #     given_name     = "Naruto"
+  #     family_name    = "Uzumaki"
+  #     email          = "nuzumaki@hokage.com"
   #     email_verified = true // no touchy
-  #   }
+  #   },
+  #   # SasukeUchiha : {
+  #   #   username       = "suchiha"
+  #   #   given_name     = "Sasuke"
+  #   #   family_name    = "Uchiha"
+  #   #   email          = "suchiha@chidori.com"
+  #   #   email_verified = true // no touchy
+  #   # },
   # }
+  # # Standard Users to create
+  # # mpc_standard_cognito_users = {
+  # #   // replace with your desired cognito users
+  # #   DefaultStandardUser : {
+  # #     username       = "default"
+  # #     given_name     = "Default"
+  # #     family_name    = "User"
+  # #     email          = "default@example.com"
+  # #     email_verified = true // no touchy
+  # #   }
+  # # }
 }

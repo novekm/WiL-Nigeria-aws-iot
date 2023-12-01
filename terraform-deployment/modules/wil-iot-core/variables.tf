@@ -102,7 +102,7 @@ variable "create_codecommit_repo" {
 }
 variable "codecommit_repo_name" {
   type    = string
-  default = "codecommit_repo"
+  default = null
 }
 variable "codecommit_repo_description" {
   type    = string
