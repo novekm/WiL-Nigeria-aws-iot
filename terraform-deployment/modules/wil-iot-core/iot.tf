@@ -24,8 +24,7 @@ resource "aws_iot_thing" "wil_climate_sensor_arrays" {
   # thing_type_name = aws_iot_thing_type.minipupper.name
 
   attributes = {
-    short_name      = each.value.short_name
-    computer_module = each.value.computer_module
+    short_name = each.value.short_name
   }
 }
 // Create IoT Thing for each Flow Sensor Array user defines

@@ -1,7 +1,7 @@
 # API Data Source (Metadata DynamoDB Table)
 resource "aws_appsync_datasource" "appsync_dynamodb_datasource" {
   count            = var.create_graphql_api ? 1 : 0
-  api_id           = aws_appsync_graphql_api.appsync_graphql_api.id
+  api_id           = aws_appsync_graphql_api.appsync_graphql_api[0].id
   name             = "${var.project_prefix}_device_metadata_dynamodb_datasource"
   service_role_arn = aws_iam_role.appsync_dynamodb_restricted_access[0].arn
   type             = "AMAZON_DYNAMODB"
@@ -14,7 +14,7 @@ resource "aws_appsync_datasource" "appsync_dynamodb_datasource" {
 # API Data Source (MQTT Messages DynamoDB Table)
 resource "aws_appsync_datasource" "mqtt_appsync_dynamodb_datasource" {
   count            = var.create_graphql_api ? 1 : 0
-  api_id           = aws_appsync_graphql_api.appsync_graphql_api.id
+  api_id           = aws_appsync_graphql_api.appsync_graphql_api[0].id
   name             = "${var.project_prefix}_device_mqtt_dynamodb_datasource"
   service_role_arn = aws_iam_role.appsync_dynamodb_restricted_access[0].arn
   type             = "AMAZON_DYNAMODB"
@@ -33,7 +33,7 @@ resource "aws_appsync_graphql_api" "appsync_graphql_api" {
   user_pool_config {
     aws_region     = data.aws_region.current.name
     default_action = "ALLOW"
-    user_pool_id   = aws_cognito_user_pool.mpc_user_pool.id
+    user_pool_id   = aws_cognito_user_pool.user_pool.id
   }
 
 
@@ -108,10 +108,10 @@ EOF
 # Resolvers
 # UNIT type resolver (default)
 # Query - Get a single Mini Pupper (APPSYNC_JS)
-resource "aws_appsync_resolver" "mpc_appsync_resolver_query_get_iot_device" {
+resource "aws_appsync_resolver" "appsync_resolver_query_get_iot_device" {
   count       = var.create_graphql_api ? 1 : 0
-  api_id      = aws_appsync_graphql_api.mpc_appsync_graphql_api.id
-  data_source = aws_appsync_datasource.mpc_appsync_dynamodb_datasource.name
+  api_id      = aws_appsync_graphql_api.appsync_graphql_api[0].id
+  data_source = aws_appsync_datasource.appsync_dynamodb_datasource[0].name
   type        = "Query"
   field       = "getIoTDevice"
   kind        = "UNIT"
@@ -125,10 +125,10 @@ resource "aws_appsync_resolver" "mpc_appsync_resolver_query_get_iot_device" {
 }
 
 # Query - List all Mini Puppers (APPSYNC_JS)
-resource "aws_appsync_resolver" "mpc_appsync_resolver_query_list_iot_devices" {
+resource "aws_appsync_resolver" "appsync_resolver_query_list_iot_devices" {
   count       = var.create_graphql_api ? 1 : 0
-  api_id      = aws_appsync_graphql_api.mpc_appsync_graphql_api.id
-  data_source = aws_appsync_datasource.mpc_appsync_dynamodb_datasource.name
+  api_id      = aws_appsync_graphql_api.appsync_graphql_api[0].id
+  data_source = aws_appsync_datasource.appsync_dynamodb_datasource[0].name
   type        = "Query"
   field       = "listIoTDevices"
   kind        = "UNIT"
@@ -142,10 +142,10 @@ resource "aws_appsync_resolver" "mpc_appsync_resolver_query_list_iot_devices" {
 }
 
 # Query - Get a IoT Message (APPSYNC_JS)
-resource "aws_appsync_resolver" "mpc_appsync_resolver_query_get_iot_message" {
+resource "aws_appsync_resolver" "appsync_resolver_query_get_iot_message" {
   count       = var.create_graphql_api ? 1 : 0
-  api_id      = aws_appsync_graphql_api.mpc_appsync_graphql_api.id
-  data_source = aws_appsync_datasource.mpc_mqtt_appsync_dynamodb_datasource.name
+  api_id      = aws_appsync_graphql_api.appsync_graphql_api[0].id
+  data_source = aws_appsync_datasource.mqtt_appsync_dynamodb_datasource[0].name
   type        = "Query"
   field       = "getIoTMessage"
   kind        = "UNIT"
@@ -159,10 +159,10 @@ resource "aws_appsync_resolver" "mpc_appsync_resolver_query_get_iot_message" {
 }
 
 # Query - List all IoT Messages (APPSYNC_JS)
-resource "aws_appsync_resolver" "mpc_appsync_resolver_query_list_iot_messages" {
+resource "aws_appsync_resolver" "appsync_resolver_query_list_iot_messages" {
   count       = var.create_graphql_api ? 1 : 0
-  api_id      = aws_appsync_graphql_api.mpc_appsync_graphql_api.id
-  data_source = aws_appsync_datasource.mpc_mqtt_appsync_dynamodb_datasource.name
+  api_id      = aws_appsync_graphql_api.appsync_graphql_api[0].id
+  data_source = aws_appsync_datasource.mqtt_appsync_dynamodb_datasource[0].name
   type        = "Query"
   field       = "listIoTMessages"
   kind        = "UNIT"
@@ -176,10 +176,10 @@ resource "aws_appsync_resolver" "mpc_appsync_resolver_query_list_iot_messages" {
 }
 
 # Query - List all IoT Messages by Device Id (APPSYNC_JS)
-resource "aws_appsync_resolver" "mpc_appsync_resolver_query_list_iot_messages_by_device_id" {
+resource "aws_appsync_resolver" "appsync_resolver_query_list_iot_messages_by_device_id" {
   count       = var.create_graphql_api ? 1 : 0
-  api_id      = aws_appsync_graphql_api.mpc_appsync_graphql_api.id
-  data_source = aws_appsync_datasource.mpc_mqtt_appsync_dynamodb_datasource.name
+  api_id      = aws_appsync_graphql_api.appsync_graphql_api[0].id
+  data_source = aws_appsync_datasource.mqtt_appsync_dynamodb_datasource[0].name
   type        = "Query"
   field       = "listIoTMessagesByDeviceId"
   kind        = "UNIT"

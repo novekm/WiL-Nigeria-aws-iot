@@ -48,9 +48,9 @@ resource "aws_amplify_app" "app" {
     USER_POOL_ID       = "${aws_cognito_user_pool.user_pool.id}"
     IDENTITY_POOL_ID   = "${aws_cognito_identity_pool.identity_pool.id}"
     APP_CLIENT_ID      = "${aws_cognito_user_pool_client.user_pool_client.id}"
-    GRAPHQL_ENDPOINT   = "${aws_appsync_graphql_api.appsync_graphql_api.uris.GRAPHQL}"
-    GRAPHQL_API_ID     = "${aws_appsync_graphql_api.appsync_graphql_api.id}"
-    GRAPHQL_API_ID     = "${aws_appsync_graphql_api.appsync_graphql_api.id}"
+    GRAPHQL_ENDPOINT   = "${aws_appsync_graphql_api.appsync_graphql_api[0].uris.GRAPHQL}"
+    GRAPHQL_API_ID     = "${aws_appsync_graphql_api.appsync_graphql_api[0].id}"
+    GRAPHQL_API_ID     = "${aws_appsync_graphql_api.appsync_graphql_api[0].id}"
     IOT_ENDPOINT       = "${data.aws_iot_endpoint.current.endpoint_address}"
   }
 }

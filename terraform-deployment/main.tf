@@ -9,6 +9,8 @@ module "wil-iot-core" {
   create_amplify_app = false // default value
   create_graphql_api = false // default value
 
+  create_codecommit_repo = true // enabled to store code in CodeCommit Git Repo within the AWS Account
+
   # - Network Information -
   # Note: For added security, eventually these values could be stored in SSM parameter store,
   # and fetched via SSM Data Sources. However, that would require users to manually enter these
@@ -30,10 +32,10 @@ module "wil-iot-core" {
       name       = "WiL_Nigeria_ClimateSensor_Array1"
       short_name = "CSA1"
     },
-    # ClimateSensorArray2 : {
-    #   name             = "WiL_Nigeria_ClimateSensor_Array2"
-    #   short_name       = "CSA2"
-    # },
+    ClimateSensorArray2 : {
+      name       = "WiL_Nigeria_ClimateSensor_Array2"
+      short_name = "CSA2"
+    },
 
 
   }
@@ -45,10 +47,10 @@ module "wil-iot-core" {
       name       = "WiL_Nigeria_FlowSensor_Array1"
       short_name = "FSA1"
     },
-    # FlowSensorArray2 : {
-    #   name             = "WiL_Nigeria_FlowSensor_Array2"
-    #   short_name       = "FSA2"
-    # },
+    FlowSensorArray2 : {
+      name       = "WiL_Nigeria_FlowSensor_Array2"
+      short_name = "FSA2"
+    },
 
   }
 

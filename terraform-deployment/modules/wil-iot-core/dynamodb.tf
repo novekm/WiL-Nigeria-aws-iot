@@ -34,7 +34,7 @@ resource "aws_dynamodb_table" "iot_devices" {
   )
 }
 
-// DynamoDB Table for MPC Devices MQTT Messages
+// DynamoDB Table for IoT Devices MQTT Messages
 resource "aws_dynamodb_table" "iot_devices_mqtt" {
   name           = "${var.project_prefix}_iot_devices_mqtt-${random_uuid.dynamodb_tables.result}" // No touchy
   billing_mode   = var.devices_billing_mode
@@ -92,12 +92,12 @@ resource "aws_dynamodb_table_item" "wil_climate_sensor_arrays_item" {
     "${aws_dynamodb_table.iot_devices.hash_key}" : { "S" : "${each.value.name}_${each.value.short_name}" },
     "DeviceName" : { "S" : "${each.value.name}" },
     "ShortName" : { "S" : "${each.value.short_name}" },
-    "ComputerModule" : { "S" : "${each.value.computer_module}" },
-    "Manufacturer" : { "S" : "${each.value.manufacturer}" },
-    "Model" : { "S" : "${each.value.model}" },
-    "Device" : { "S" : "${each.value.device}" },
-    "RegisteredOwner" : { "S" : "${each.value.registered_owner}" },
-    "PrimaryLocation" : { "S" : "${each.value.primary_location}" },
+    # "ComputerModule" : { "S" : "${each.value.computer_module}" },
+    # "Manufacturer" : { "S" : "${each.value.manufacturer}" },
+    # "Model" : { "S" : "${each.value.model}" },
+    # "Device" : { "S" : "${each.value.device}" },
+    # "RegisteredOwner" : { "S" : "${each.value.registered_owner}" },
+    # "PrimaryLocation" : { "S" : "${each.value.primary_location}" },
   })
 }
 
@@ -108,35 +108,15 @@ resource "aws_dynamodb_table_item" "wil_flow_sensor_arrays_item" {
   hash_key   = aws_dynamodb_table.iot_devices.hash_key
 
   item = jsonencode({
-    "${aws_dynamodb_table.mpc_devices.hash_key}" : { "S" : "${each.value.name}_${each.value.short_name}" },
+    "${aws_dynamodb_table.iot_devices.hash_key}" : { "S" : "${each.value.name}_${each.value.short_name}" },
     "DeviceName" : { "S" : "${each.value.name}" },
     "ShortName" : { "S" : "${each.value.short_name}" },
-    "ComputerModule" : { "S" : "${each.value.computer_module}" },
-    "Manufacturer" : { "S" : "${each.value.manufacturer}" },
-    "Model" : { "S" : "${each.value.model}" },
-    "Device" : { "S" : "${each.value.device}" },
-    "RegisteredOwner" : { "S" : "${each.value.registered_owner}" },
-    "PrimaryLocation" : { "S" : "${each.value.primary_location}" },
+    # "ComputerModule" : { "S" : "${each.value.computer_module}" },
+    # "Manufacturer" : { "S" : "${each.value.manufacturer}" },
+    # "Model" : { "S" : "${each.value.model}" },
+    # "Device" : { "S" : "${each.value.device}" },
+    # "RegisteredOwner" : { "S" : "${each.value.registered_owner}" },
+    # "PrimaryLocation" : { "S" : "${each.value.primary_location}" },
   })
 }
-
-# # Create item in DynamoDB table for the EXISTING Mini Pupper (values coming from existing SSM Parameters)
-# resource "aws_dynamodb_table_item" "mpc_existing_devices_item" {
-#   count      = var.lookup_existing_minipuppers_ssm_parameters ? 1 : 0
-#   table_name = aws_dynamodb_table.mpc_devices.name
-#   hash_key   = aws_dynamodb_table.mpc_devices.hash_key
-
-#   item = jsonencode({
-#     # "${aws_dynamodb_table.mpc_devices.hash_key}" : { "S" : "${random_uuid.minipupper_device_id[each.key].result}" },
-#     "${aws_dynamodb_table.mpc_devices.hash_key}" : { "S" : "${data.aws_ssm_parameter.mpc_existing_minipupper_device_id_ssm[0].value}" },
-#     "DeviceName" : { "S" : "${data.aws_ssm_parameter.mpc_existing_minipupper_device_name_ssm[0].value}" },
-#     "ShortName" : { "S" : "${data.aws_ssm_parameter.mpc_existing_minipupper_short_name_ssm[0].value}" },
-#     "ComputerModule" : { "S" : "${data.aws_ssm_parameter.mpc_existing_minipupper_computer_module_ssm[0].value}" },
-#     "Manufacturer" : { "S" : "${data.aws_ssm_parameter.mpc_existing_minipupper_manfacturer_ssm[0].value}" },
-#     "Model" : { "S" : "${data.aws_ssm_parameter.mpc_existing_minipupper_model_ssm[0].value}" },
-#     "Device" : { "S" : "${data.aws_ssm_parameter.mpc_existing_minipupper_device_ssm[0].value}" },
-#     "RegisteredOwner" : { "S" : "${data.aws_ssm_parameter.mpc_existing_minipupper_registered_owner_ssm[0].value}" },
-#     "PrimaryLocation" : { "S" : "${data.aws_ssm_parameter.mpc_existing_minipupper_primary_location_ssm[0].value}" },
-#   })
-# }
 

@@ -37,7 +37,7 @@ resource "local_file" "public_key_wil_flow_sensor_arrays" {
 // Climate Sensor Arrays - secrets.h file
 resource "local_file" "dynamic_secrets_h_wil_climate_sensor_arrays" {
   for_each = var.wil_climate_sensor_arrays == null ? {} : var.wil_climate_sensor_arrays
-  filename = "${path.root}/CLIMATE_SENSOR_ARRAYS_AWS_IOT/${each.value.name}/ClimateSensorArrayIoT-${each.value.name}/Secrets-${each.value.name}.h"
+  filename = "${path.root}/ARDUINO/CLIMATE_SENSOR_ARRAYS_AWS_IOT/${each.value.name}/Secrets-${each.value.name}.h"
   content  = <<-EOF
     #include <pgmspace.h>
 
@@ -103,7 +103,7 @@ resource "local_file" "dynamic_secrets_h_wil_climate_sensor_arrays" {
 # Climate Sensor Arrays .ino file
 resource "local_file" "dynamic_ino_wil_climate_sensor_arrays" {
   for_each = var.wil_climate_sensor_arrays == null ? {} : var.wil_climate_sensor_arrays
-  filename = "${path.root}/CLIMATE_SENSOR_ARRAYS_AWS_IOT/${each.value.name}/ClimateSensorArrayIoT-${each.value.name}/ClimateSensorArrayIoT-${each.value.name}.ino"
+  filename = "${path.root}/ARDUINO/CLIMATE_SENSOR_ARRAYS_AWS_IOT/${each.value.name}/ClimateSensorArrayIoT-${each.value.name}.ino"
   # content  = aws_iot_certificate.cert.public_key
   content = <<-EOF
     /*
@@ -126,6 +126,9 @@ resource "local_file" "dynamic_ino_wil_climate_sensor_arrays" {
     #include <SPI.h>
     #include <Wire.h>
     #include <Adafruit_GFX.h>
+    #include "UUID.h"
+
+    UUID uuid;
 
     //Definitions
     #define TIME_ZONE +1 //(GMT+1)time for Abuja,Nigeria
@@ -252,7 +255,11 @@ resource "local_file" "dynamic_ino_wil_climate_sensor_arrays" {
 
     void publishMessage() //Data sent to AWS
     {
+    // Generate UUID. This value is used as the MessageId
+    uuid.generate();
+
     StaticJsonDocument<200> doc;
+    doc["MessageId"] = uuid;
     doc["DeviceId"] = DEVICE_ID;
     doc["Time"] = millis();
     doc["Humidity"] = h;
@@ -397,7 +404,7 @@ resource "local_file" "dynamic_ino_wil_climate_sensor_arrays" {
 // Flow Sensors - secrets.h file
 resource "local_file" "dynamic_secrets_h_wil_flow_sensor_arrays" {
   for_each = var.wil_flow_sensor_arrays == null ? {} : var.wil_flow_sensor_arrays
-  filename = "${path.root}/FLOW_SENSOR_ARRAYS_AWS_IOT/${each.value.name}/FlowSensorArrayIoT-${each.value.name}/Secrets-${each.value.name}.h"
+  filename = "${path.root}/ARDUINO/FLOW_SENSOR_ARRAYS_AWS_IOT/${each.value.name}/Secrets-${each.value.name}.h"
   content  = <<-EOF
     #include <pgmspace.h>
 
@@ -449,14 +456,14 @@ resource "local_file" "dynamic_secrets_h_wil_flow_sensor_arrays" {
     // Copy contents from XXXXXXXX-certificate.pem.crt here ▼
     // device certificate
     static const char AWS_CERT_CRT[] PROGMEM = R"KEY(
-    ${aws_iot_certificate.cert_wil_climate_sensor_arrays[each.key].certificate_pem}
+    ${aws_iot_certificate.cert_wil_flow_sensor_arrays[each.key].certificate_pem}
     )KEY";
 
 
     // Copy contents from  XXXXXXXX-private.pem.key here ▼
     // device private key
     static const char AWS_CERT_PRIVATE[] PROGMEM = R"KEY(
-    ${aws_iot_certificate.cert_wil_climate_sensor_arrays[each.key].private_key}
+    ${aws_iot_certificate.cert_wil_flow_sensor_arrays[each.key].private_key}
     )KEY";
 
   EOF
@@ -466,7 +473,7 @@ resource "local_file" "dynamic_secrets_h_wil_flow_sensor_arrays" {
 # Flow Array Sensors .ino file
 resource "local_file" "dynamic_ino_wil_flow_sensor_arrays" {
   for_each = var.wil_flow_sensor_arrays == null ? {} : var.wil_flow_sensor_arrays
-  filename = "${path.root}/FLOW_SENSOR_ARRAYS_AWS_IOT/${each.value.name}/FlowSensorArrayIoT-${each.value.name}FlowSensorArrayIoT-${each.value.name}.ino"
+  filename = "${path.root}/ARDUINO/FLOW_SENSOR_ARRAYS_AWS_IOT/${each.value.name}/FlowSensorArrayIoT-${each.value.name}.ino"
   # content  = aws_iot_certificate.cert.public_key
   content = <<-EOF
     /*
@@ -491,6 +498,9 @@ resource "local_file" "dynamic_ino_wil_flow_sensor_arrays" {
     #include <Adafruit_GFX.h>
     #include <OneWire.h>
     #include <DallasTemperature.h>
+    #include "UUID.h"
+
+    UUID uuid;
 
     //Definitions ---------------
     #define TIME_ZONE +1 //(GMT+1)time for Abuja,Nigeria
@@ -685,7 +695,11 @@ resource "local_file" "dynamic_ino_wil_flow_sensor_arrays" {
     //Function publishMessage ---------------
     void publishMessage() //Data sent to AWS
     {
+    // Generate UUID. This value is used as the MessageId
+    uuid.generate();
+
     StaticJsonDocument<200> doc;
+    doc["MessageId"] = uuid;
     doc["DeviceId"] = DEVICE_ID;
     doc["Time"] = millis();
     doc["Humidity"] = humidity;
@@ -944,11 +958,12 @@ resource "local_file" "dynamic_ino_wil_flow_sensor_arrays" {
 
 }
 resource "local_file" "env" {
+  count    = var.create_amplify_app ? 1 : 0
   filename = "${path.root}/../web-app/.env"
   content  = <<-EOF
   VITE_REGION=${data.aws_region.current.name}
-  VITE_API_ID=${aws_appsync_graphql_api.appsync_graphql_api.id}
-  VITE_GRAPHQL_URL=${aws_appsync_graphql_api.appsync_graphql_api.uris.GRAPHQL}
+  VITE_API_ID=${aws_appsync_graphql_api.appsync_graphql_api[0].id}
+  VITE_GRAPHQL_URL=${aws_appsync_graphql_api.appsync_graphql_api[0].uris.GRAPHQL}
   VITE_IDENTITY_POOL_ID=${aws_cognito_identity_pool.identity_pool.id}
   VITE_USER_POOL_ID=${aws_cognito_user_pool.user_pool.id}
   VITE_APP_CLIENT_ID=${aws_cognito_user_pool_client.user_pool_client.id}

@@ -191,7 +191,7 @@ data "aws_iam_policy_document" "greengrass_v2_token_exchange" {
 }
 resource "aws_iam_policy" "greengrass_v2_token_exchange_restricted_access_policy" {
   count       = var.create_restricted_access_roles ? 1 : 0
-  name        = "GreengrassV2TokenExchangeRoleAccess"
+  name        = "${var.project_prefix}_GreengrassV2TokenExchangeRoleAccess"
   description = "First Policy for GreengrassV2TokenExchangeRole."
   policy      = data.aws_iam_policy_document.greengrass_v2_token_exchange.json
 }
@@ -235,11 +235,11 @@ data "aws_iam_policy_document" "greengrass_v2_token_exchange_2" {
 }
 resource "aws_iam_policy" "greengrass_v2_token_exchange_restricted_access_policy_2" {
   count       = var.create_restricted_access_roles ? 1 : 0
-  name        = "GreengrassV2TokenExchangeRoleAccess_2"
+  name        = "${var.project_prefix}_GreengrassV2TokenExchangeRoleAccess_2"
   description = "Seoncd Policy for GreengrassV2TokenExchangeRole."
   policy      = data.aws_iam_policy_document.greengrass_v2_token_exchange_2.json
 }
-# Policy for robot
+# Policy for Greengrass S3
 data "aws_iam_policy_document" "greengrass_s3" {
   statement {
     effect  = "Allow"
@@ -283,7 +283,7 @@ data "aws_iam_policy_document" "greengrass_s3" {
 }
 resource "aws_iam_policy" "greengrass_s3_restricted_access_policy" {
   count       = var.create_restricted_access_roles ? 1 : 0
-  name        = "GreengrassS3Policy"
+  name        = "${var.project_prefix}_GreengrassS3Policy"
   description = "Policy for Greengrass S3."
   policy      = data.aws_iam_policy_document.greengrass_s3.json
 }
@@ -308,7 +308,7 @@ data "aws_iam_policy_document" "dynamodb_restricted_access_policy" {
 }
 resource "aws_iam_policy" "dynamodb_restricted_access_policy" {
   count       = var.create_restricted_access_roles ? 1 : 0
-  name        = "dynamodb_restricted_access_policy"
+  name        = "${var.project_prefix}_dynamodb_restricted_access_policy"
   description = "Policy granting full DynamoDB permissions for the iot_devices DynamoDB table."
   policy      = data.aws_iam_policy_document.dynamodb_restricted_access_policy[0].json
 
@@ -327,7 +327,7 @@ data "aws_iam_policy_document" "mqtt_dynamodb_restricted_access_policy" {
 }
 resource "aws_iam_policy" "mqtt_dynamodb_restricted_access_policy" {
   count       = var.create_restricted_access_roles ? 1 : 0
-  name        = "mqtt_dynamodb_restricted_access_policy"
+  name        = "${var.project_prefix}_mqtt_dynamodb_restricted_access_policy"
   description = "Policy granting full DynamoDB permissions for the iot_devices_mqtt DynamoDB table."
   policy      = data.aws_iam_policy_document.mqtt_dynamodb_restricted_access_policy[0].json
 
@@ -352,7 +352,7 @@ data "aws_iam_policy_document" "dynamodb_restricted_access_read_only_policy" {
 }
 resource "aws_iam_policy" "dynamodb_restricted_access_read_only_policy" {
   count       = var.create_restricted_access_roles ? 1 : 0
-  name        = "dynamodb_restricted_access_read_only_policy"
+  name        = "${var.project_prefix}_dynamodb_restricted_access_read_only_policy"
   description = "Policy granting restricted (read-only) DynamoDB permissions for the iot_devices DynamoDB table."
   policy      = data.aws_iam_policy_document.dynamodb_restricted_access_read_only_policy[0].json
 
@@ -366,7 +366,7 @@ resource "aws_iam_role" "cognito_authrole_restricted_access" {
   # Conditional create of the role - default is 'TRUE'
   count = var.create_restricted_access_roles ? 1 : 0
 
-  name               = "authRole_restricted_access"
+  name               = "${var.project_prefix}_authRole_restricted_access"
   assume_role_policy = data.aws_iam_policy_document.cognito_authrole_trust_relationship.json
   managed_policy_arns = [
     "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess",
@@ -391,7 +391,7 @@ resource "aws_iam_role" "cognito_authrole_restricted_access" {
 resource "aws_iam_role" "cognito_unauthrole_restricted_access" {
   # Conditional create of the role - default is 'TRUE'
   count              = var.create_restricted_access_roles ? 1 : 0
-  name               = "unauthRole_restricted_access"
+  name               = "${var.project_prefix}_unauthRole_restricted_access"
   assume_role_policy = data.aws_iam_policy_document.cognito_unauthrole_trust_relationship.json
 
   # Managed Policies
@@ -414,7 +414,7 @@ resource "aws_iam_role" "cognito_admin_group_restricted_access" {
   # Conditional create of the role - default is 'TRUE'
   count = var.create_restricted_access_roles ? 1 : 0
 
-  name               = "cognito_admin_group_restricted_access"
+  name               = "${var.project_prefix}_cognito_admin_group_restricted_access"
   assume_role_policy = data.aws_iam_policy_document.cognito_admin_group_trust_relationship.json
   description        = "Role granting full DynamoDB permissions for the iot_devicess DynamoDB table."
   managed_policy_arns = [
@@ -442,7 +442,7 @@ resource "aws_iam_role" "cognito_standard_group_restricted_access" {
   # Conditional create of the role - default is 'TRUE'
   count = var.create_restricted_access_roles ? 1 : 0
 
-  name               = "cognito_standard_group_restricted_access"
+  name               = "${var.project_prefix}_cognito_standard_group_restricted_access"
   assume_role_policy = data.aws_iam_policy_document.cognito_standard_group_trust_relationship.json
   description        = "Role granting restricted (read-only) DynamoDB permissions for the iot_devicess DynamoDB table."
   managed_policy_arns = [
@@ -467,7 +467,7 @@ resource "aws_iam_role" "cognito_standard_group_restricted_access" {
 resource "aws_iam_role" "appsync_dynamodb_restricted_access" {
   # Conditional create of the role - default is 'TRUE'
   count              = var.create_restricted_access_roles ? 1 : 0
-  name               = "appsync_dynamodb_restricted_access"
+  name               = "${var.project_prefix}_appsync_dynamodb_restricted_access"
   assume_role_policy = data.aws_iam_policy_document.appsync_trust_relationship.json
   # Managed Policies
   managed_policy_arns = [
@@ -493,7 +493,7 @@ resource "aws_iam_role" "appsync_dynamodb_restricted_access" {
 resource "aws_iam_role" "iot_to_dynamodb_restricted_access" {
   # Conditional create of the role - default is 'TRUE'
   count              = var.create_restricted_access_roles ? 1 : 0
-  name               = "iot_to_dynamodb_restricted_access"
+  name               = "${var.project_prefix}_iot_to_dynamodb_restricted_access"
   assume_role_policy = data.aws_iam_policy_document.iot_trust_relationship.json
   managed_policy_arns = [
     aws_iam_policy.iot_to_dynamodb_restricted_access_policy[0].arn
@@ -506,12 +506,12 @@ resource "aws_iam_role" "iot_to_dynamodb_restricted_access" {
 resource "aws_iam_role" "iot_token_exchange_role_restricted_access" {
   # Conditional create of the role - default is 'TRUE'
   count              = var.create_restricted_access_roles ? 1 : 0
-  name               = "GreengrassV2TokenExchangeRole"
+  name               = "${var.project_prefix}_GreengrassV2TokenExchangeRole"
   assume_role_policy = data.aws_iam_policy_document.iot_credentials_trust_relationship.json
   managed_policy_arns = [
     aws_iam_policy.greengrass_v2_token_exchange_restricted_access_policy[0].arn,
     aws_iam_policy.greengrass_v2_token_exchange_restricted_access_policy_2[0].arn,
-    aws_iam_policy.robot_restricted_access_policy[0].arn,
+    aws_iam_policy.greengrass_s3_restricted_access_policy[0].arn,
   ]
 }
 
