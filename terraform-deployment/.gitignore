@@ -7,6 +7,9 @@
 *_AWS_IOT/
 *_AWS_IOT/*
 
+ARDUINO/
+ARDUINO/**
+
 # Local .terraform directories
 **/.terraform
 
