@@ -43,15 +43,10 @@ resource "local_file" "dynamic_secrets_h_wil_climate_sensor_arrays" {
     #define SECRET
 
     #define THINGNAME "${each.value.name}"
-    #define DEVICE_ID "${each.value.name}_${each.value.short_name}"
 
     int8_t TIME_ZONE = +1; //(GMT+1): Abuja, Nigeria
 
     #define AWS_IOT_ENDPOINT        "${data.aws_iot_endpoint.current.endpoint_address}"
-
-    #define AWS_IOT_PUBLISH_TOPIC        "device/${each.value.name}_${each.value.short_name}/data"
-    #define AWS_IOT_SUBSCRIBE_TOPIC        "device/${each.value.name}_${each.value.short_name}/data"
-
 
     #define WIFI_SSID        "${var.wifi_ssid}"
     #define WIFI_PASSWORD    "${var.wifi_password}"
@@ -121,20 +116,24 @@ resource "local_file" "dynamic_ino_wil_climate_sensor_arrays" {
     #include <ArduinoJson.h>
     #include <time.h>
     #include "Secrets-${each.value.name}.h"
+    #include <SD.h>
     #include "DHT.h"
     #include <SPI.h>
     #include <Wire.h>
     #include <Adafruit_GFX.h>
-    #include "UUID.h"
+    //#include "UUID.h"
 
-    UUID uuid;
+    //UUID uuid;
 
     //Definitions
     #define TIME_ZONE +1 //(GMT+1)time for Abuja,Nigeria
     #define CS_PIN 15 //data pin D8 (GIO15)
     #define DHTPIN 4 //data pin D2 (GIO4)
     #define DHTTYPE DHT11 // sensor type
-    //#define DEVICE_ID 1001 //WiL_IoT Device Catalog
+    #define DEVICE_ID ${each.value.name}_${each.value.short_name}
+
+    #define AWS_IOT_PUBLISH_TOPIC        "device/${each.value.name}_${each.value.short_name}/data"
+    #define AWS_IOT_SUBSCRIBE_TOPIC        "device/${each.value.name}_${each.value.short_name}/data"
 
     DHT dht(DHTPIN, DHTTYPE); //Object constructor to communicate as a sensor
 
@@ -170,13 +169,14 @@ resource "local_file" "dynamic_ino_wil_climate_sensor_arrays" {
     //AWS_Certificate IDs
     WiFiClientSecure net;
 
+    //BearSSL::X509List cert(cacert);
+    //BearSSL::X509List client_crt(client_cert);
+    //BearSSL::PrivateKey key(privkey);
     BearSSL::X509List cert(AWS_CERT_CA);
     BearSSL::X509List client_crt(AWS_CERT_CRT);
     BearSSL::PrivateKey key(AWS_CERT_PRIVATE);
 
     PubSubClient client(net);
-
-
 
 
     void NTPConnect(void)
@@ -197,7 +197,6 @@ resource "local_file" "dynamic_ino_wil_climate_sensor_arrays" {
     Serial.print(asctime(&timeinfo));
     }
 
-
     void messageReceived(char *topic, byte *payload, unsigned int length)
     {
     Serial.print("Received [");
@@ -209,7 +208,6 @@ resource "local_file" "dynamic_ino_wil_climate_sensor_arrays" {
     }
     Serial.println();
     }
-
 
     void connectAWS()
     {
@@ -231,7 +229,7 @@ resource "local_file" "dynamic_ino_wil_climate_sensor_arrays" {
     net.setTrustAnchors(&cert);
     net.setClientRSACert(&client_crt, &key);
 
-    client.setServer(AWS_IOT_ENDPOINT, 8883);
+    client.setServer(MQTT_HOST, 8883);
     client.setCallback(messageReceived);
 
 
@@ -263,20 +261,14 @@ resource "local_file" "dynamic_ino_wil_climate_sensor_arrays" {
 
     void publishMessage() //Data sent to AWS
     {
-    // Generate UUID. This value is used as the MessageId
-    uuid.generate();
-
     StaticJsonDocument<200> doc;
-    doc["MessageId"] = uuid;
-    doc["DeviceId"] = DEVICE_ID;
-    doc["Time"] = millis();
-    doc["Humidity"] = h;
-    doc["Flowrate_lpm"] = flowRate;
-    doc["Flowrate_total"] = (totalMilliLitres);
-    doc["Temperature_C"] = t;
-    doc["Temperature_F"] = tF;
-    doc["SoilMoistureValue"] = soilMoistureValue;
-    doc["SoilMoisture"] = soilmoisturepercent;
+    doc["deviceID"] = DEVICE_ID;
+    doc["time"] = millis();
+    doc["humidity"] = h;
+    doc["temperature_C"] = t;
+    doc["temperature_F"] = tF;
+    doc["soilmoisturevalue"] = soilMoistureValue;
+    doc["soilmoisture"] = soilmoisturepercent;
 
     //_____ End Data sent to AWS
 
@@ -289,9 +281,9 @@ resource "local_file" "dynamic_ino_wil_climate_sensor_arrays" {
     void setup()
     {
     Serial.begin(115200);
-    connectAWS();
-    dht.begin();
-    pinMode(5, OUTPUT); // Relay
+    connectAWS(); //physical connection to AWS
+    dht.begin(); // Climate Sensor
+    //pinMode(5, OUTPUT); // Relay
     pinMode(16, OUTPUT);// Initializes when Connected to AWS
     pinMode(A0, INPUT); // Moisture Sensor
     pinMode(RelayControl1, OUTPUT); // Water Valve Relay
@@ -386,29 +378,29 @@ resource "local_file" "dynamic_ino_wil_climate_sensor_arrays" {
     void loop()
     {
     {
-    //Serial.print("Current");
-    configTime(TIME_ZONE * 3600, 0 * 3600, "pool.ntp.org", "time.nist.gov");
-    now = time(nullptr);
-    while (now < nowish)
-    {
+        //Serial.print("Current");
+        configTime(TIME_ZONE * 3600, 0 * 3600, "pool.ntp.org", "time.nist.gov");
+        now = time(nullptr);
+        while (now < nowish)
+        {
         delay(500);
         Serial.print(".");
         now = time(nullptr);
-    }
-    //Serial.println("done!");
-    struct tm timeinfo;
-    gmtime_r(&now, &timeinfo);
-    //Serial.print("Time: ");
-    Serial.print(asctime(&timeinfo));
-    Serial.print(" ");
-    //Serial.print(now);
+        }
+        //Serial.println("done!");
+        struct tm timeinfo;
+        gmtime_r(&now, &timeinfo);
+        //Serial.print("Time: ");
+        Serial.print(asctime(&timeinfo));
+        Serial.print(" ");
+        //Serial.print(now);
     }
 
     {
     //Device_ID
-        Serial.print("Device_ID: ");
-        Serial.println(DEVICE_ID);
-        Serial.print(" ");
+    Serial.print("Device_ID: ");
+    Serial.println(DEVICE_ID);
+    Serial.print(" ");
 
     //DHT11
     h = dht.readHumidity();
@@ -476,6 +468,7 @@ resource "local_file" "dynamic_ino_wil_climate_sensor_arrays" {
     }
 
 
+
     now = time(nullptr);
 
     if (!client.connected())
@@ -508,15 +501,10 @@ resource "local_file" "dynamic_secrets_h_wil_flow_sensor_arrays" {
     #define SECRET
 
     #define THINGNAME "${each.value.name}"
-    #define DEVICE_ID "${each.value.name}_${each.value.short_name}"
 
     int8_t TIME_ZONE = +1; //(GMT+1): Abuja, Nigeria
 
     #define AWS_IOT_ENDPOINT        "${data.aws_iot_endpoint.current.endpoint_address}"
-
-    #define AWS_IOT_PUBLISH_TOPIC        "device/${each.value.name}_${each.value.short_name}/data"
-    #define AWS_IOT_SUBSCRIBE_TOPIC        "device/${each.value.name}_${each.value.short_name}/data"
-
 
     #define WIFI_SSID        "${var.wifi_ssid}"
     #define WIFI_PASSWORD    "${var.wifi_password}"
@@ -571,7 +559,7 @@ resource "local_file" "dynamic_ino_wil_flow_sensor_arrays" {
   # content  = aws_iot_certificate.cert.public_key
   content = <<-EOF
     /*
-    BlackBox Series - ClimateSensor Array - DeviceId = ${each.value.name}/${each.value.name}
+    BlackBox Series - FlowSensor Array - DeviceId = ${each.value.name}/${each.value.name}
     Built for: WiL_Nigeria - Sustaining Water Project
     Managing Coders: Michael J. Watkins & Kevon Mayers
     www.BetterThingsLLC.com
@@ -592,14 +580,18 @@ resource "local_file" "dynamic_ino_wil_flow_sensor_arrays" {
     #include <Adafruit_GFX.h>
     #include <OneWire.h>
     #include <DallasTemperature.h>
-    #include "UUID.h"
+    //#include "UUID.h"
 
-    UUID uuid;
+    //UUID uuid;
 
     //Definitions ---------------
     #define TIME_ZONE +1 //(GMT+1)time for Abuja,Nigeria
     #define CS_PIN 15 //data pin D8 (GIO15)
     #define SENSOR  0 // sensor type
+    #define DEVICE_ID ${each.value.name}_${each.value.short_name}
+
+    #define AWS_IOT_PUBLISH_TOPIC        "device/${each.value.name}_${each.value.short_name}/data"
+    #define AWS_IOT_SUBSCRIBE_TOPIC        "device/${each.value.name}_${each.value.short_name}/data"
 
     // LCD number of columns and rows
     int lcdColumns = 16;
@@ -648,12 +640,16 @@ resource "local_file" "dynamic_ino_wil_flow_sensor_arrays" {
     //AWS_Certificate IDs ---------------
     WiFiClientSecure net;
 
+    //BearSSL::X509List cert(cacert);
+    //BearSSL::X509List client_crt(client_cert);
+    //BearSSL::PrivateKey key(privkey);
     BearSSL::X509List cert(AWS_CERT_CA);
     BearSSL::X509List client_crt(AWS_CERT_CRT);
     BearSSL::PrivateKey key(AWS_CERT_PRIVATE);
 
     PubSubClient client(net);
 
+    //----------------
 
     //Function NTP Connection ---------------
     void NTPConnect(void)
@@ -742,7 +738,7 @@ resource "local_file" "dynamic_ino_wil_flow_sensor_arrays" {
     net.setTrustAnchors(&cert);
     net.setClientRSACert(&client_crt, &key);
 
-    client.setServer(AWS_IOT_ENDPOINT, 8883);
+    client.setServer(MQTT_HOST, 8883);
     client.setCallback(messageReceived);
 
 
@@ -760,8 +756,7 @@ resource "local_file" "dynamic_ino_wil_flow_sensor_arrays" {
         delay(1000);
     }
 
-    if (!client.connected())
-    {
+    if (!client.connected()) {
         Serial.println("AWS IoT Timeout!");
         return;
     }
@@ -782,28 +777,24 @@ resource "local_file" "dynamic_ino_wil_flow_sensor_arrays" {
     //Function publishMessage ---------------
     void publishMessage() //Data sent to AWS
     {
-    // Generate UUID. This value is used as the MessageId
-    uuid.generate();
-
     StaticJsonDocument<200> doc;
-    doc["MessageId"] = uuid;
-    doc["DeviceId"] = DEVICE_ID;
-    doc["Time"] = millis();
-    doc["Humidity"] = humidity;
-    doc["Flowrate_lpm"] = flowRate;
-    doc["Flowrate_total"] = (totalMilliLitres);
-    doc["Temperature_C"] = temperatureC;
-    doc["Temperature_F"] = temperatureF;
-    doc["SoilMoisturevValue"] = soilMoistureValue;
-    doc["SoilMoisture"] = soilmoisturepercent;
+    doc["deviceID"] = deviceID;
+    doc["time"] = millis();
+    doc["humidity"] = humidity;
+    doc["flowrate_lpm"] = flowRate;
+    doc["flowrate_total"] = (totalMilliLitres);
+    doc["temperature_C"] = temperatureC;
+    doc["temperature_F"] = temperatureF;
+    doc["soilmoisturevalue"] = soilMoistureValue;
+    doc["soilmoisture"] = soilmoisturepercent;
 
-    //_____ End Data sent to AWS
 
     char jsonBuffer[512];
     serializeJson(doc, jsonBuffer); // print to client
     client.publish(AWS_IOT_PUBLISH_TOPIC, jsonBuffer);
     }
 
+    //----------------
 
     void setup()
     {
@@ -828,6 +819,7 @@ resource "local_file" "dynamic_ino_wil_flow_sensor_arrays" {
     lcd.setCursor(0, 0);
     lcd.println("FlowMeter Switch");
     delay(3600);
+    lcd.clear();
     Serial.println("Initializing the SD card");
     lcd.setCursor(0, 0);
     lcd.print("Init SD card");
@@ -921,9 +913,9 @@ resource "local_file" "dynamic_ino_wil_flow_sensor_arrays" {
 
     if(myFile)
     {
-        myFile.print(now); //print DEVICE_ID value
+        myFile.print(now); //print deviceID value
         myFile.print(","); //print comma
-        myFile.print(DEVICE_ID); //print DEVICE_ID value
+        myFile.print(deviceID); //print deviceID value
         myFile.print(","); //print comma
         myFile.print(millis()); //print time since ESP8266 last reset in milliseconds
         myFile.print(","); //print comma
@@ -950,6 +942,7 @@ resource "local_file" "dynamic_ino_wil_flow_sensor_arrays" {
     }
     }
 
+    //----------------
 
     void loop()
     {
@@ -991,8 +984,8 @@ resource "local_file" "dynamic_ino_wil_flow_sensor_arrays" {
 
         //Print the cumulative total of litres flowed since starting
         //Serial.print("Total Liters: ");
-        // Serial.print(totalLitres);
-        // Serial.print("L / ");
+    // Serial.print(totalLitres);
+    // Serial.print("L / ");
         Serial.print(totalMilliLitres);
         Serial.print("mL");
         Serial.println("\t");       // Print tab space
@@ -1042,8 +1035,6 @@ resource "local_file" "dynamic_ino_wil_flow_sensor_arrays" {
         }
     }
     }
-
-
 
   EOF
 
