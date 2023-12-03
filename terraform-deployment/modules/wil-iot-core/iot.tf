@@ -173,8 +173,8 @@ resource "aws_iot_topic_rule" "devices_iot_to_timestream" {
     table_name    = aws_timestreamwrite_table.timestream-table.table_name
     role_arn      = aws_iam_role.iot_to_timestream_restricted_access[0].arn
     dimension {
-      name  = "DeviceId"
-      value = "$${DeviceId}"
+      name  = "deviceID"
+      value = "$${deviceID}"
     }
     timestamp {
       unit  = "MILLISECONDS"
