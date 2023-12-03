@@ -161,7 +161,7 @@ resource "local_file" "dynamic_ino_wil_climate_sensor_arrays" {
 
     //Variables SD Card
     File myFile;
-    String fileName = "${each.value.name}_${each.value.short_name}.csv"
+    String fileName = "${each.value.name}_${each.value.short_name}.csv";
     unsigned temperatureF = 0; //added for SD card input
     unsigned temperatureC = 0; //added for SD card input
     unsigned flowRate = 0; //added for SD card input
@@ -170,9 +170,6 @@ resource "local_file" "dynamic_ino_wil_climate_sensor_arrays" {
     //AWS_Certificate IDs
     WiFiClientSecure net;
 
-    //BearSSL::X509List cert(cacert);
-    //BearSSL::X509List client_crt(client_cert);
-    //BearSSL::PrivateKey key(privkey);
     BearSSL::X509List cert(AWS_CERT_CA);
     BearSSL::X509List client_crt(AWS_CERT_CRT);
     BearSSL::PrivateKey key(AWS_CERT_PRIVATE);
@@ -646,14 +643,14 @@ resource "local_file" "dynamic_ino_wil_flow_sensor_arrays" {
 
     //Variables SD Card
     File myFile;
-    String fileName = "${each.value.name}_${each.value.short_name}.csv"
+    String fileName = "${each.value.name}_${each.value.short_name}.csv";
 
     //AWS_Certificate IDs ---------------
     WiFiClientSecure net;
 
-    BearSSL::X509List cert(cacert);
-    BearSSL::X509List client_crt(client_cert);
-    BearSSL::PrivateKey key(privkey);
+    BearSSL::X509List cert(AWS_CERT_CA);
+    BearSSL::X509List client_crt(AWS_CERT_CRT);
+    BearSSL::PrivateKey key(AWS_CERT_PRIVATE);
 
     PubSubClient client(net);
 
