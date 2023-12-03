@@ -158,25 +158,52 @@ resource "aws_iot_policy_attachment" "att_wil_flow_sensor_arrays" {
   target = aws_iot_certificate.cert_wil_flow_sensor_arrays[each.key].arn
 }
 
-
-# Create IoT Rule to send MQTT from AWS IoT to DynamoDB Table
-resource "aws_iot_topic_rule" "devices_iot_to_dynamodb" {
-  name        = "IOT_TO_DYNAMODB"
-  description = "IoT Rule to send MQTT from AWS IoT to DynamoDB Table"
+# Create IoT Rule to send MQTT from AWS IoT to Timestream Table
+resource "aws_iot_topic_rule" "devices_iot_to_timestream" {
+  name        = "IOT_TO_TIMESTREAM"
+  description = "IoT Rule to send MQTT from AWS IoT to Timestream Table"
   enabled     = true
   # sql         = "SELECT * FROM '${var.iot_topic_prefix}/1'"
   sql = "SELECT * FROM 'device/+/+'"
 
   sql_version = "2016-03-23"
 
-  dynamodbv2 {
-    put_item {
-      table_name = aws_dynamodb_table.iot_devices_mqtt.name
+  timestream {
+    database_name = aws_timestreamwrite_database.timestream-db.database_name
+    table_name    = aws_timestreamwrite_table.timestream-table.table_name
+    role_arn      = aws_iam_role.iot_to_timestream_restricted_access[0].arn
+    dimension {
+      name  = "DeviceId"
+      value = "$${DeviceId}"
     }
-    role_arn = aws_iam_role.iot_to_dynamodb_restricted_access[0].arn
+    timestamp {
+      unit  = "MILLISECONDS"
+      value = "$${timestamp()}"
+    }
   }
 
 }
+
+# # Create IoT Rule to send MQTT from AWS IoT to DynamoDB Table
+# resource "aws_iot_topic_rule" "devices_iot_to_dynamodb" {
+#   name        = "IOT_TO_DYNAMODB"
+#   description = "IoT Rule to send MQTT from AWS IoT to DynamoDB Table"
+#   enabled     = true
+#   # sql         = "SELECT * FROM '${var.iot_topic_prefix}/1'"
+#   sql = "SELECT * FROM 'device/+/+'"
+
+#   sql_version = "2016-03-23"
+
+#   dynamodbv2 {
+#     put_item {
+#       table_name = aws_dynamodb_table.iot_devices_mqtt.name
+#     }
+#     role_arn = aws_iam_role.iot_to_dynamodb_restricted_access[0].arn
+#   }
+
+# }
+
+
 
 # # Create AWS Greengrass Component
 # resource "awscc_greengrassv2_component_version" "wil_greengrass_component" {

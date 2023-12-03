@@ -157,19 +157,70 @@ data "aws_iam_policy_document" "iot_credentials_trust_relationship" {
 # --- CUSTOMER MANAGED POLICIES (RESTRICTED ACCESS) ---
 # - IoT Policies -
 # Policy to allow AWS IoT Rule to PutItem in MQTT DynamoDB Table
-data "aws_iam_policy_document" "iot_to_dynamodb_restricted_access_policy" {
+data "aws_iam_policy_document" "iot_to_timestream_restricted_access_policy" {
   statement {
     effect    = "Allow"
-    actions   = ["dynamodb:PutItem"]
-    resources = [aws_dynamodb_table.iot_devices_mqtt.arn]
+    actions   = ["timestream:*"]
+    resources = ["*"]
+  }
+  statement {
+    effect    = "Allow"
+    actions   = ["s3:ListAllMyBuckets"]
+    resources = ["*"]
+  }
+  statement {
+    effect    = "Allow"
+    actions   = ["kms:DescribeKey"]
+    resources = ["*"]
+  }
+  statement {
+    effect    = "Allow"
+    actions   = ["kms:CreateGrant"]
+    resources = ["*"]
+  }
+  statement {
+    effect    = "Allow"
+    actions   = ["kms:CreateGrant"]
+    resources = ["*"]
+    condition {
+      test     = "ForAnyValue:StringEquals"
+      variable = "kms:EncryptionContextKeys"
+      values   = ["aws:timestream:database-name"]
+    }
+    condition {
+      test     = "Bool"
+      variable = "kms:GrantIsForAWSResource"
+      values   = [true]
+    }
+    condition {
+      test     = "StringLike"
+      variable = "kms:ViaService"
+      values   = ["timestream.*.amazonaws.com"]
+    }
   }
 }
-resource "aws_iam_policy" "iot_to_dynamodb_restricted_access_policy" {
+resource "aws_iam_policy" "iot_to_timestream_restricted_access_policy" {
   count       = var.create_restricted_access_roles ? 1 : 0
-  name        = "${var.project_prefix}_iot_to_dynamodb_restricted_access_policy"
-  description = "Policy granting DynamoDB 'PutItem' access for the iot_devices_mqtt DynamoDB table."
-  policy      = data.aws_iam_policy_document.iot_to_dynamodb_restricted_access_policy.json
+  name        = "${var.project_prefix}_iot_to_timestream_restricted_access_policy"
+  description = "Policy granting AmazonTimestreamFullAccess permissions."
+  policy      = data.aws_iam_policy_document.iot_to_timestream_restricted_access_policy.json
 }
+
+
+# # Policy to allow AWS IoT Rule to PutItem in MQTT DynamoDB Table
+# data "aws_iam_policy_document" "iot_to_dynamodb_restricted_access_policy" {
+#   statement {
+#     effect    = "Allow"
+#     actions   = ["dynamodb:PutItem"]
+#     resources = [aws_dynamodb_table.iot_devices_mqtt.arn]
+#   }
+# }
+# resource "aws_iam_policy" "iot_to_dynamodb_restricted_access_policy" {
+#   count       = var.create_restricted_access_roles ? 1 : 0
+#   name        = "${var.project_prefix}_iot_to_dynamodb_restricted_access_policy"
+#   description = "Policy granting DynamoDB 'PutItem' access for the iot_devices_mqtt DynamoDB table."
+#   policy      = data.aws_iam_policy_document.iot_to_dynamodb_restricted_access_policy.json
+# }
 
 
 
@@ -489,16 +540,27 @@ resource "aws_iam_role" "appsync_dynamodb_restricted_access" {
 
 # - IoT Roles -
 # IoT Restricted Access Role
-# Role granting IoT DynamoDB restricted access (PutItem).
-resource "aws_iam_role" "iot_to_dynamodb_restricted_access" {
+# Role granting IoT access to timestream.
+resource "aws_iam_role" "iot_to_timestream_restricted_access" {
   # Conditional create of the role - default is 'TRUE'
   count              = var.create_restricted_access_roles ? 1 : 0
-  name               = "${var.project_prefix}_iot_to_dynamodb_restricted_access"
+  name               = "${var.project_prefix}_iot_to_timestream_restricted_access"
   assume_role_policy = data.aws_iam_policy_document.iot_trust_relationship.json
   managed_policy_arns = [
-    aws_iam_policy.iot_to_dynamodb_restricted_access_policy[0].arn
+    aws_iam_policy.iot_to_timestream_restricted_access_policy[0].arn
   ]
 }
+
+# # Role granting IoT DynamoDB restricted access (PutItem).
+# resource "aws_iam_role" "iot_to_dynamodb_restricted_access" {
+#   # Conditional create of the role - default is 'TRUE'
+#   count              = var.create_restricted_access_roles ? 1 : 0
+#   name               = "${var.project_prefix}_iot_to_dynamodb_restricted_access"
+#   assume_role_policy = data.aws_iam_policy_document.iot_trust_relationship.json
+#   managed_policy_arns = [
+#     aws_iam_policy.iot_to_dynamodb_restricted_access_policy[0].arn
+#   ]
+# }
 
 
 # NEW

@@ -26,7 +26,7 @@ variable "create_amplify_app" {
 }
 variable "app_name" {
   type        = string
-  default     = "mpc-App"
+  default     = null
   description = "The name of the Amplify Application"
 }
 variable "enable_auto_branch_creation" {
@@ -120,7 +120,7 @@ variable "lookup_ssm_github_access_token" {
   type        = bool
   default     = false
   description = <<-EOF
-  *ImpcORTANT!*
+  *IORTANT!*
   Conditional data fetch of SSM parameter store for GitHub access token.
   To ensure security of this token, you must manually add it via the AWS console
   before using.
@@ -256,7 +256,7 @@ variable "invite_email_message" {
   type    = string
   default = <<-EOF
     You have been invited to the Mini Pupper Control App! Your username is "{username}" and
-    tempcorary password is "{####}". Please reach out to an admin if you have issues signing in.
+    temporary password is "{####}". Please reach out to an admin if you have issues signing in.
 
   EOF
 
@@ -272,7 +272,7 @@ variable "invite_sms_message" {
   type    = string
   default = <<-EOF
     You have been invited to the Mini Pupper Control App! Your username is "{username}" and
-    tempcorary password is "{####}".
+    temporary password is "{####}".
 
   EOF
 
@@ -311,7 +311,7 @@ variable "password_policy_require_symbols" {
 variable "password_policy_temp_password_validity_days" {
   type        = number
   default     = 7
-  description = "The number of days a tempc password is valid. If user does not sign-in during this time, will need to be reset by an admin"
+  description = "The number of days a temp password is valid. If user does not sign-in during this time, will need to be reset by an admin"
 
 }
 # General Schema

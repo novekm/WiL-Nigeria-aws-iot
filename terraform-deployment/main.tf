@@ -29,14 +29,9 @@ module "wil-iot-core" {
   wil_climate_sensor_arrays = {
     // no spaces allowed in strings
     ClimateSensorArray1 : {
-      name       = "WiL_Nigeria_ClimateSensor_Array1"
+      name       = "WiL_SustainWaterArray_ClimateValve"
       short_name = "CSA1"
     },
-    # ClimateSensorArray2 : {
-    #   name       = "WiL_Nigeria_ClimateSensor_Array2"
-    #   short_name = "CSA2"
-    # },
-
 
   }
 
@@ -44,13 +39,9 @@ module "wil-iot-core" {
   wil_flow_sensor_arrays = {
     // no spaces allowed in strings
     FlowSensorArray1 : {
-      name       = "WiL_Nigeria_FlowSensor_Array1"
+      name       = "WiL_SustainWaterArray_TempFlow"
       short_name = "FSA1"
     },
-    # FlowSensorArray2 : {
-    #   name       = "WiL_Nigeria_FlowSensor_Array2"
-    #   short_name = "FSA2"
-    # },
 
   }
 

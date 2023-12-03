@@ -1,37 +1,36 @@
 // - Climate Sensor Arrays -
 resource "local_file" "device_certificate_wil_climate_sensor_arrays" {
   for_each = var.wil_climate_sensor_arrays == null ? {} : var.wil_climate_sensor_arrays
-  filename = "${path.root}/${var.project_prefix}_AWS_IOT/${each.value.name}/${each.value.name}-device-certificate.pem"
+  filename = "${path.root}/ARDUINO/CLIMATE_SENSOR_ARRAYS_AWS_IOT/${each.value.name}/certs/${each.value.name}-device-certificate.pem"
   content  = aws_iot_certificate.cert_wil_climate_sensor_arrays[each.key].certificate_pem
 }
 resource "local_file" "private_key_wil_climate_sensor_arrays" {
   for_each = var.wil_climate_sensor_arrays == null ? {} : var.wil_climate_sensor_arrays
-  filename = "${path.root}/${var.project_prefix}_AWS_IOT/${each.value.name}/${each.value.name}-private-key.pem.key"
+  filename = "${path.root}/ARDUINO/CLIMATE_SENSOR_ARRAYS_AWS_IOT/${each.value.name}/certs/${each.value.name}-private-key.pem.key"
   content  = aws_iot_certificate.cert_wil_climate_sensor_arrays[each.key].private_key
 }
 resource "local_file" "public_key_wil_climate_sensor_arrays" {
   for_each = var.wil_climate_sensor_arrays == null ? {} : var.wil_climate_sensor_arrays
-  filename = "${path.root}/${var.project_prefix}_AWS_IOT/${each.value.name}/${each.value.name}-public-key.pem.key"
+  filename = "${path.root}/ARDUINO/CLIMATE_SENSOR_ARRAYS_AWS_IOT/${each.value.name}/certs/${each.value.name}-public-key.pem.key"
   content  = aws_iot_certificate.cert_wil_climate_sensor_arrays[each.key].public_key
 }
 
 // - Flow Sensor Arrays -
 resource "local_file" "device_certificate_wil_flow_sensor_arrays" {
   for_each = var.wil_flow_sensor_arrays == null ? {} : var.wil_flow_sensor_arrays
-  filename = "${path.root}/${var.project_prefix}_AWS_IOT/${each.value.name}/${each.value.name}-device-certificate.pem"
+  filename = "${path.root}/ARDUINO/FLOW_SENSOR_ARRAYS_AWS_IOT/${each.value.name}/certs/${each.value.name}-device-certificate.pem"
   content  = aws_iot_certificate.cert_wil_flow_sensor_arrays[each.key].certificate_pem
 }
 resource "local_file" "private_key_wil_flow_sensor_arrays" {
   for_each = var.wil_flow_sensor_arrays == null ? {} : var.wil_flow_sensor_arrays
-  filename = "${path.root}/${var.project_prefix}_AWS_IOT/${each.value.name}/${each.value.name}-private-key.pem.key"
+  filename = "${path.root}/ARDUINO/FLOW_SENSOR_ARRAYS_AWS_IOT/${each.value.name}/certs/${each.value.name}-private-key.pem.key"
   content  = aws_iot_certificate.cert_wil_flow_sensor_arrays[each.key].private_key
 }
 resource "local_file" "public_key_wil_flow_sensor_arrays" {
   for_each = var.wil_flow_sensor_arrays == null ? {} : var.wil_flow_sensor_arrays
-  filename = "${path.root}/${var.project_prefix}_AWS_IOT/${each.value.name}/${each.value.name}-public-key.pem.key"
+  filename = "${path.root}/ARDUINO/FLOW_SENSOR_ARRAYS_AWS_IOT/${each.value.name}/certs/${each.value.name}-public-key.pem.key"
   content  = aws_iot_certificate.cert_wil_flow_sensor_arrays[each.key].public_key
 }
-
 
 
 // Climate Sensor Arrays - secrets.h file
@@ -54,8 +53,8 @@ resource "local_file" "dynamic_secrets_h_wil_climate_sensor_arrays" {
     #define AWS_IOT_SUBSCRIBE_TOPIC        "device/${each.value.name}_${each.value.short_name}/data"
 
 
-    #define WIFI_SSID[]        "${var.wifi_ssid}"
-    #define WIFI_PASSWORD[]    "${var.wifi_password}"
+    #define WIFI_SSID        "${var.wifi_ssid}"
+    #define WIFI_PASSWORD    "${var.wifi_password}"
 
     // Insert AWS Root CA1 contents below
     static const char AWS_CERT_CA[] PROGMEM = R"EOF(
@@ -103,11 +102,11 @@ resource "local_file" "dynamic_secrets_h_wil_climate_sensor_arrays" {
 # Climate Sensor Arrays .ino file
 resource "local_file" "dynamic_ino_wil_climate_sensor_arrays" {
   for_each = var.wil_climate_sensor_arrays == null ? {} : var.wil_climate_sensor_arrays
-  filename = "${path.root}/ARDUINO/CLIMATE_SENSOR_ARRAYS_AWS_IOT/${each.value.name}/ClimateSensorArrayIoT-${each.value.name}.ino"
+  filename = "${path.root}/ARDUINO/CLIMATE_SENSOR_ARRAYS_AWS_IOT/${each.value.name}/${each.value.name}.ino"
   # content  = aws_iot_certificate.cert.public_key
   content = <<-EOF
     /*
-    BlackBox Series - ClimateSensor Array - Device = 1001
+    BlackBox Series - ClimateSensor Array - DeviceId = ${each.value.name}_${each.value.short_name}
     Built for: WiL_Nigeria - Sustaining Water Project
     Managing Coders: Michael J. Watkins & Kevon Mayers
     www.BetterThingsLLC.com
@@ -121,7 +120,7 @@ resource "local_file" "dynamic_ino_wil_climate_sensor_arrays" {
     #include <PubSubClient.h>
     #include <ArduinoJson.h>
     #include <time.h>
-    #include "secrets.h"
+    #include "Secrets-${each.value.name}.h"
     #include "DHT.h"
     #include <SPI.h>
     #include <Wire.h>
@@ -163,16 +162,20 @@ resource "local_file" "dynamic_ino_wil_climate_sensor_arrays" {
     //Variables SD Card
     File myFile;
     String fileName = "${each.value.name}_${each.value.short_name}.csv"
-
-    // TODO - Check with Mike if this value needs to be hardcoded - what does it reference?
-   // String fileName = "WiL_IoT_1001_2SD.csv";
+    unsigned temperatureF = 0; //added for SD card input
+    unsigned temperatureC = 0; //added for SD card input
+    unsigned flowRate = 0; //added for SD card input
+    unsigned totalMilliLitres = 0; //added for SD card input
 
     //AWS_Certificate IDs
     WiFiClientSecure net;
 
-    BearSSL::X509List cert(cacert);
-    BearSSL::X509List client_crt(client_cert);
-    BearSSL::PrivateKey key(privkey);
+    //BearSSL::X509List cert(cacert);
+    //BearSSL::X509List client_crt(client_cert);
+    //BearSSL::PrivateKey key(privkey);
+    BearSSL::X509List cert(AWS_CERT_CA);
+    BearSSL::X509List client_crt(AWS_CERT_CRT);
+    BearSSL::PrivateKey key(AWS_CERT_PRIVATE);
 
     PubSubClient client(net);
 
@@ -217,6 +220,7 @@ resource "local_file" "dynamic_ino_wil_climate_sensor_arrays" {
     WiFi.mode(WIFI_STA);
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
+    Serial.println(" ");
     Serial.println(String("Attempting to connect to SSID: ") + String(WIFI_SSID));
 
     while (WiFi.status() != WL_CONNECTED)
@@ -246,10 +250,17 @@ resource "local_file" "dynamic_ino_wil_climate_sensor_arrays" {
         Serial.println("AWS IoT Timeout!");
         return;
     }
+
+    { //Green LED ON indicates active data transfer to AWS
+        digitalWrite(16, HIGH);
+    }
+
     // Subscribe to a topic
     client.subscribe(AWS_IOT_SUBSCRIBE_TOPIC);
 
     Serial.println("AWS IoT Connected!");
+    delay(1000);
+
     }
 
 
@@ -263,6 +274,8 @@ resource "local_file" "dynamic_ino_wil_climate_sensor_arrays" {
     doc["DeviceId"] = DEVICE_ID;
     doc["Time"] = millis();
     doc["Humidity"] = h;
+    doc["Flowrate_lpm"] = flowRate;
+    doc["Flowrate_total"] = (totalMilliLitres);
     doc["Temperature_C"] = t;
     doc["Temperature_F"] = tF;
     doc["SoilMoistureValue"] = soilMoistureValue;
@@ -282,8 +295,94 @@ resource "local_file" "dynamic_ino_wil_climate_sensor_arrays" {
     connectAWS();
     dht.begin();
     pinMode(5, OUTPUT); // Relay
+    pinMode(16, OUTPUT);// Initializes when Connected to AWS
     pinMode(A0, INPUT); // Moisture Sensor
     pinMode(RelayControl1, OUTPUT); // Water Valve Relay
+
+    //SDCard_initialization
+    initializeCard();
+
+    /* //SDCard_File Delete_Overwrite
+    if(SD.exists(fileName)) //check if the file already exists
+    {
+        SD.remove(fileName); //if it did, delete it
+        Serial.print(fileName);
+        Serial.println(" already exists.");
+        Serial.println("It is being deleted and will be overwritten.");
+    } */
+
+    writeHeader();
+
+    }
+
+    //SDCard_Function initializeCard() to initialize the SD card ---------------
+    void initializeCard()
+    {
+    //Serial.println("Beginning initialization of SD Card: ");
+
+    if(!SD.begin(CS_PIN)) //of the SD card on pin GIO15 is not accessible
+    {
+        Serial.println("SD initialization failed");
+        while (1); //infinite loop to force resetting the arduino
+    }
+    Serial.println("SD Initialized successfully"); //if you reach here it is setup successfully
+    }
+
+    //SDCard_writeHeader() function to write the header data to the data file ---------------
+    void writeHeader()
+    {
+    myFile = SD.open(fileName, FILE_WRITE); // open file to edit (write)data to it
+
+    if(myFile)
+    {
+        Serial.println("Writing to " + fileName + ": ");
+        Serial.println("---------------\n");
+
+        myFile.println("Now,deviceID,Time,Humidity,Temp_C,Temp_F,soilMoistureValue,soilMoisture%,FlowRate_LPM,Total Liters");
+
+        myFile.close(); //close the file
+    }
+
+    else
+    {
+        Serial.println("error opening " + fileName);
+    }
+    }
+
+    //SDCard_writeData() function to write the dataFields to the file ---------------
+    void writeData()
+    {
+    myFile = SD.open(fileName, FILE_WRITE);
+
+    if(myFile)
+    {
+        myFile.print(now); //print deviceID value
+        myFile.print(","); //print comma
+        myFile.print(DEVICE_ID); //print deviceID value
+        myFile.print(","); //print comma
+        myFile.print(millis()); //print time since ESP8266 last reset in milliseconds
+        myFile.print(","); //print comma
+        myFile.print(h); //print humidity value
+        myFile.print(","); //print comma
+        myFile.print(t); //print temp_C value
+        myFile.print(","); //print comma
+        myFile.print(tF); //print temp_F value
+        myFile.print(","); //print comma
+        myFile.print(soilMoistureValue); //print soilMoistureValue value
+        myFile.print(","); //print comma
+        myFile.print(soilmoisturepercent); //print soilmoisturepercent value
+        myFile.print(","); //print comma
+        myFile.print(flowRate); // FlowRate LPM
+        myFile.print(","); //print comma
+        myFile.println(totalMilliLitres); // Flowrate Total Liters
+
+        myFile.close();
+    }
+
+    else
+    {
+        Serial.println("error opening " + fileName);
+    }
 
     }
 
@@ -309,10 +408,10 @@ resource "local_file" "dynamic_ino_wil_climate_sensor_arrays" {
     }
 
     {
-        //Device_ID
-    Serial.print("Device_ID: ");
-    Serial.println(DEVICE_ID);
-    Serial.print(" ");
+    //Device_ID
+        Serial.print("Device_ID: ");
+        Serial.println(DEVICE_ID);
+        Serial.print(" ");
 
     //DHT11
     h = dht.readHumidity();
@@ -325,6 +424,7 @@ resource "local_file" "dynamic_ino_wil_climate_sensor_arrays" {
         return;
     }
     */
+
     Serial.print(F("Humidity: "));
     Serial.print(h);
     Serial.print(F("%  Air Temperature: "));
@@ -334,17 +434,14 @@ resource "local_file" "dynamic_ino_wil_climate_sensor_arrays" {
     Serial.println(F("°C "));
 
     //Capactive Resister
-
     if (soilMoistureValue > 425)
     {
-        digitalWrite(RelayControl1,HIGH);// NO1 and COM1 Connected (Pump on)
+        digitalWrite(RelayControl1,HIGH);// NO1 and COM1 Connected (ValveOpen)
     }
     else
     {
-        digitalWrite(RelayControl1,LOW);// NO1 and COM1 disconnected (Pump off)
+        digitalWrite(RelayControl1,LOW);// NO1 and COM1 disconnected (ValveClosed)
     }
-
-
 
     soilMoistureValue = analogRead(SensorPin);  //put Sensor insert into soil
 
@@ -376,8 +473,11 @@ resource "local_file" "dynamic_ino_wil_climate_sensor_arrays" {
         Serial.println(" ");
     }
 
-    }
+    writeData();
+
     delay(2000);
+    }
+
 
     now = time(nullptr);
 
@@ -417,15 +517,12 @@ resource "local_file" "dynamic_secrets_h_wil_flow_sensor_arrays" {
 
     #define AWS_IOT_ENDPOINT        "${data.aws_iot_endpoint.current.endpoint_address}"
 
-    #define AWS_IOT_PUBLISH_TOPIC   "WiL_Nigeria_01_ClimateWater_Sensors" //AWS PublishTopic
-    #define AWS_IOT_SUBSCRIBE_TOPIC   "WiL_Nigeria_01_ClimateWater_Sensors" //AWS PublishTopic
-
     #define AWS_IOT_PUBLISH_TOPIC        "device/${each.value.name}_${each.value.short_name}/data"
     #define AWS_IOT_SUBSCRIBE_TOPIC        "device/${each.value.name}_${each.value.short_name}/data"
 
 
-    #define WIFI_SSID[]        "${var.wifi_ssid}"
-    #define WIFI_PASSWORD[]    "${var.wifi_password}"
+    #define WIFI_SSID        "${var.wifi_ssid}"
+    #define WIFI_PASSWORD    "${var.wifi_password}"
 
     // Insert AWS Root CA1 contents below
     static const char AWS_CERT_CA[] PROGMEM = R"EOF(
@@ -473,11 +570,11 @@ resource "local_file" "dynamic_secrets_h_wil_flow_sensor_arrays" {
 # Flow Array Sensors .ino file
 resource "local_file" "dynamic_ino_wil_flow_sensor_arrays" {
   for_each = var.wil_flow_sensor_arrays == null ? {} : var.wil_flow_sensor_arrays
-  filename = "${path.root}/ARDUINO/FLOW_SENSOR_ARRAYS_AWS_IOT/${each.value.name}/FlowSensorArrayIoT-${each.value.name}.ino"
+  filename = "${path.root}/ARDUINO/FLOW_SENSOR_ARRAYS_AWS_IOT/${each.value.name}/${each.value.name}.ino"
   # content  = aws_iot_certificate.cert.public_key
   content = <<-EOF
     /*
-    BlackBox Series - ClimateSensor Array - Device = 1002
+    BlackBox Series - ClimateSensor Array - DeviceId = ${each.value.name}/${each.value.name}
     Built for: WiL_Nigeria - Sustaining Water Project
     Managing Coders: Michael J. Watkins & Kevon Mayers
     www.BetterThingsLLC.com
@@ -491,7 +588,7 @@ resource "local_file" "dynamic_ino_wil_flow_sensor_arrays" {
     #include <LiquidCrystal_I2C.h>
     #include <ArduinoJson.h>
     #include <time.h>
-    #include "secrets.h"
+    #include "Secrets-${each.value.name}.h"
     #include <SD.h>
     #include <SPI.h>
     #include <Wire.h>
@@ -506,10 +603,6 @@ resource "local_file" "dynamic_ino_wil_flow_sensor_arrays" {
     #define TIME_ZONE +1 //(GMT+1)time for Abuja,Nigeria
     #define CS_PIN 15 //data pin D8 (GIO15)
     #define SENSOR  0 // sensor type
-    //#define deviceID 1002 //WiL_IoT Device Catalog
-
-    #define AWS_IOT_PUBLISH_TOPIC        "device/${each.value.name}_${each.value.short_name}/data"
-    #define AWS_IOT_SUBSCRIBE_TOPIC        "device/${each.value.name}_${each.value.short_name}/data"
 
     // LCD number of columns and rows
     int lcdColumns = 16;
@@ -555,9 +648,6 @@ resource "local_file" "dynamic_ino_wil_flow_sensor_arrays" {
     File myFile;
     String fileName = "${each.value.name}_${each.value.short_name}.csv"
 
-    // TODO - Check with Mike if this value needs to be hardcoded - what does it reference?
-   // String fileName = "WiL_IoT_1002_2SD.csv";
-
     //AWS_Certificate IDs ---------------
     WiFiClientSecure net;
 
@@ -567,7 +657,6 @@ resource "local_file" "dynamic_ino_wil_flow_sensor_arrays" {
 
     PubSubClient client(net);
 
-    //----------------
 
     //Function NTP Connection ---------------
     void NTPConnect(void)
@@ -674,7 +763,8 @@ resource "local_file" "dynamic_ino_wil_flow_sensor_arrays" {
         delay(1000);
     }
 
-    if (!client.connected()) {
+    if (!client.connected())
+    {
         Serial.println("AWS IoT Timeout!");
         return;
     }
@@ -710,13 +800,13 @@ resource "local_file" "dynamic_ino_wil_flow_sensor_arrays" {
     doc["SoilMoisturevValue"] = soilMoistureValue;
     doc["SoilMoisture"] = soilmoisturepercent;
 
+    //_____ End Data sent to AWS
 
     char jsonBuffer[512];
     serializeJson(doc, jsonBuffer); // print to client
     client.publish(AWS_IOT_PUBLISH_TOPIC, jsonBuffer);
     }
 
-    //----------------
 
     void setup()
     {
@@ -792,6 +882,9 @@ resource "local_file" "dynamic_ino_wil_flow_sensor_arrays" {
     if(!SD.begin(CS_PIN)) //of the SD card on pin GIO15 is not accessible
     {
         Serial.println("SD initialization failed");
+        lcd.clear();
+        lcd.setCursor(0, 0);
+        lcd.print("SD init Failed");
         while (1); //infinite loop to force resetting the arduino
     }
     Serial.println("SD Initialized successfully"); //if you reach here it is setup successfully
@@ -813,7 +906,7 @@ resource "local_file" "dynamic_ino_wil_flow_sensor_arrays" {
         Serial.println("Writing to " + fileName + ": ");
         Serial.println("---------------\n");
 
-        myFile.println("Now,DEVICE_ID,Time,Humidity,Temp_C,Temp_F,soilMoistureValue,soilMoisture%,FlowRate_LPM,Total Liters");
+        myFile.println("Now,deviceID,Time,Humidity,Temp_C,Temp_F,soilMoistureValue,soilMoisture%,FlowRate_LPM,Total Liters");
 
         myFile.close(); //close the file
     }
@@ -860,7 +953,6 @@ resource "local_file" "dynamic_ino_wil_flow_sensor_arrays" {
     }
     }
 
-    //----------------
 
     void loop()
     {
@@ -902,8 +994,8 @@ resource "local_file" "dynamic_ino_wil_flow_sensor_arrays" {
 
         //Print the cumulative total of litres flowed since starting
         //Serial.print("Total Liters: ");
-    // Serial.print(totalLitres);
-    // Serial.print("L / ");
+        // Serial.print(totalLitres);
+        // Serial.print("L / ");
         Serial.print(totalMilliLitres);
         Serial.print("mL");
         Serial.println("\t");       // Print tab space
@@ -953,6 +1045,8 @@ resource "local_file" "dynamic_ino_wil_flow_sensor_arrays" {
         }
     }
     }
+
+
 
   EOF
 
