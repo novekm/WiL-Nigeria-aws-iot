@@ -130,7 +130,7 @@ resource "local_file" "dynamic_ino_wil_climate_sensor_arrays" {
     #define CS_PIN 15 //data pin D8 (GIO15)
     #define DHTPIN 4 //data pin D2 (GIO4)
     #define DHTTYPE DHT11 // sensor type
-    #define DEVICE_ID ${each.value.name}_${each.value.short_name}
+    #define deviceID "${each.value.name}_${each.value.short_name}"
 
     #define AWS_IOT_PUBLISH_TOPIC        "device/${each.value.name}_${each.value.short_name}/data"
     #define AWS_IOT_SUBSCRIBE_TOPIC        "device/${each.value.name}_${each.value.short_name}/data"
@@ -229,7 +229,7 @@ resource "local_file" "dynamic_ino_wil_climate_sensor_arrays" {
     net.setTrustAnchors(&cert);
     net.setClientRSACert(&client_crt, &key);
 
-    client.setServer(MQTT_HOST, 8883);
+    client.setServer(AWS_IOT_ENDPOINT, 8883);
     client.setCallback(messageReceived);
 
 
@@ -262,7 +262,7 @@ resource "local_file" "dynamic_ino_wil_climate_sensor_arrays" {
     void publishMessage() //Data sent to AWS
     {
     StaticJsonDocument<200> doc;
-    doc["deviceID"] = DEVICE_ID;
+    doc["deviceID"] = deviceID;
     doc["time"] = millis();
     doc["humidity"] = h;
     doc["temperature_C"] = t;
@@ -347,7 +347,7 @@ resource "local_file" "dynamic_ino_wil_climate_sensor_arrays" {
     {
         myFile.print(now); //print deviceID value
         myFile.print(","); //print comma
-        myFile.print(DEVICE_ID); //print deviceID value
+        myFile.print(deviceID); //print deviceID value
         myFile.print(","); //print comma
         myFile.print(millis()); //print time since ESP8266 last reset in milliseconds
         myFile.print(","); //print comma
@@ -399,7 +399,7 @@ resource "local_file" "dynamic_ino_wil_climate_sensor_arrays" {
     {
     //Device_ID
     Serial.print("Device_ID: ");
-    Serial.println(DEVICE_ID);
+    Serial.println(deviceID);
     Serial.print(" ");
 
     //DHT11
@@ -588,7 +588,7 @@ resource "local_file" "dynamic_ino_wil_flow_sensor_arrays" {
     #define TIME_ZONE +1 //(GMT+1)time for Abuja,Nigeria
     #define CS_PIN 15 //data pin D8 (GIO15)
     #define SENSOR  0 // sensor type
-    #define DEVICE_ID ${each.value.name}_${each.value.short_name}
+    #define deviceID "${each.value.name}_${each.value.short_name}"
 
     #define AWS_IOT_PUBLISH_TOPIC        "device/${each.value.name}_${each.value.short_name}/data"
     #define AWS_IOT_SUBSCRIBE_TOPIC        "device/${each.value.name}_${each.value.short_name}/data"
@@ -738,7 +738,7 @@ resource "local_file" "dynamic_ino_wil_flow_sensor_arrays" {
     net.setTrustAnchors(&cert);
     net.setClientRSACert(&client_crt, &key);
 
-    client.setServer(MQTT_HOST, 8883);
+    client.setServer(AWS_IOT_ENDPOINT, 8883);
     client.setCallback(messageReceived);
 
 
